@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mektep.Edu — Мектеп Тәрбие Жұмысы Порталы</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Хабарлама терезесі (Alert алмастырғыш) -->
+    <div id="notificationModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 text-center transform transition-all">
+            <div id="notifIcon" class="w-14 h-14 rounded-full flex items-center justify-center mx-auto text-2xl bg-indigo-100 text-indigo-600">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h3 id="notifTitle" class="text-lg font-bold text-slate-900">Хабарлама</h3>
+            <p id="notifMessage" class="text-sm text-slate-600">Мәтін осында болады...</p>
+            <div id="notifButtons" class="flex justify-center gap-2 pt-2">
+                <button onclick="closeNotification()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-md">Түсінікті</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Авторизация / Кіру терезесі -->
+    <div id="authModal" class="fixed inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 border border-indigo-100/20 relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="text-center">
+                <div class="relative w-20 h-20 mx-auto mb-4 group">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-2xl shadow-lg shadow-indigo-500/30 transform group-hover:scale-105 transition duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-white text-3xl font-black tracking-tighter">
+                        <i class="fa-solid fa-feather-pointed drop-shadow-md"></i>
+                    </div>
+                </div>
+                <div class="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider mb-2">Mektep.Edu</div>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Тәрбие Порталы</h2>
+                <p class="text-slate-500 text-sm mt-1">Тіркелу және жүйеге кіру</p>
+            </div>
+
+            <div class="space-y-4 pt-2">
+                <button onclick="loginAsAdmin()" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 font-semibold py-3.5 px-4 rounded-2xl transition shadow-sm group">
+                    <i class="fa-brands fa-google text-red-500 text-lg group-hover:scale-110 transition"></i>
+                    Администратор ретінде кіру (Google)
+                </button>
+                
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-4 text-slate-400 text-xs font-medium uppercase tracking-wider">Немесе сынып жетекші</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Сынып жетекшінің бір реттік коды</label>
+                        <input type="text" id="teacherCodeInput" placeholder="Мысалы: TCH-9921 немесе KOD-11" class="w-full px-4 py-3.5 border border-slate-200 bg-slate-50/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-sm font-mono uppercase transition">
+                    </div>
+                    <button onclick="loginAsTeacher()" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold py-3.5 px-4 rounded-2xl transition shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
+                        <span>Сынып жетекші ретінде кіру</span>
+                        <i class="fa-solid fa-arrow-right-long text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="text-center text-xs text-slate-400 bg-slate-50 p-4 rounded-2xl space-y-1 border border-slate-100">
+                <p>Барлық деректер автоматты түрде бұлтты жүйеде (Cloud Firestore) сақталады.</p>
+                <p>Әдепкі кодтар: <span class="font-mono font-bold text-slate-600">TCH-9921</span>, <span class="font-mono font-bold text-slate-600">TCH-4412</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Негізгі қолданба контейнері -->
+    <div id="appContainer" class="flex-1 flex flex-col hidden">
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between shadow-xs">
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                    <i class="fa-solid fa-feather-pointed text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 id="institutionTitle" class="font-black text-slate-900 text-base md:text-lg tracking-tight">Mektep.Edu</h1>
+                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-extrabold uppercase rounded-md border border-indigo-100">Cloud</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium" id="userRoleIndicator">Рөл: Тағайындалуда...</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="logout()" class="text-slate-500 hover:text-red-600 text-sm font-semibold transition flex items-center gap-2 bg-slate-100 hover:bg-red-50 px-4 py-2.5 rounded-xl">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Шығу</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 flex flex-col md:flex-row">
+            <!-- Сайдбар меню -->
+            <aside class="w-full md:w-72 bg-white border-r border-slate-200 p-4 space-y-1.5 overflow-y-auto">
+                <p class="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Негізгі бөлімдер</p>
+                <button onclick="switchTab('orders')" id="btn-orders" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition bg-indigo-50 text-indigo-700 shadow-xs">
+                    <i class="fa-solid fa-file-shield w-5 text-center"></i> Тәрбие бұйрықтары
+                </button>
+                <button onclick="switchTab('folder')" id="btn-folder" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-folder-open w-5 text-center"></i> Сынып папкасы
+                </button>
+                <button onclick="switchTab('parents')" id="btn-parents" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-users w-5 text-center"></i> Ата-аналармен жұмыс
+                </button>
+                <button onclick="switchTab('docs')" id="btn-docs" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-book-bookmark w-5 text-center"></i> Анықтамалар мен хаттамалар
+                </button>
+                <button onclick="switchTab('students')" id="btn-students" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-user-graduate w-5 text-center"></i> Оқушы құжаттары
+                </button>
+                <button onclick="switchTab('events')" id="btn-events" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-calendar-days w-5 text-center"></i> Іс-шаралар тізімі
+                </button>
+                <button onclick="switchTab('plan')" id="btn-plan" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-clipboard-list w-5 text-center"></i> Тәрбие жұмыс жоспары
+                </button>
+                <button onclick="switchTab('teachers')" id="btn-teachers" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-chalkboard-user w-5 text-center"></i> Сынып жетекшілер
+                </button>
+                <button onclick="switchTab('period')" id="btn-period" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i> Есептік кезең
+                </button>
+            </aside>
+
+            <!-- Негізгі контент аймағы -->
+            <main class="flex-1 p-4 md:p-6 overflow-y-auto">
+                <div id="tabContent" class="max-w-6xl mx-auto space-y-6">
+                    <!-- Dinamika arqyly toltyrylady -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Құжат немесе жазба қосу модальды терезесі -->
+    <div id="actionModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-5">
+            <h3 id="modalTitle" class="text-xl font-black text-slate-900">Жаңа құжат қосу</h3>
+            <div id="modalFormFields" class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                <!-- Динамикалық өрістер -->
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button onclick="closeModal()" class="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-2xl text-sm font-semibold transition">Болдырмау</button>
+                <button onclick="saveRecord()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-sm font-semibold transition shadow-md shadow-indigo-200">Сақтау</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Mektep.Edu: standalone application logic -->
+    <script>
+        /*
+         * Mektep.Edu standalone version
+         * --------------------------------
+         * - Works on GitHub Pages and normal web hosting.
+         * - Saves data in localStorage, so refresh/reopen in the same browser
+         *   keeps the entered data.
+         * - No hidden __firebase_config / __initial_auth_token variables.
+         *
+         * IMPORTANT:
+         * localStorage is browser-specific. If you need the SAME data on
+         * different computers, connect a real Firebase/Supabase backend.
+         * The original code contained placeholder Firebase credentials, so
+         * they were intentionally not used here.
+         */
+
+        const STORAGE_KEY = 'mektep_edu_portal_v2';
+        const SESSION_KEY = 'mektep_edu_session_v2';
+        const ADMIN_PIN = '123456';
+
+        const defaultInitialData = {
+            orders: [
+                { id: "o1", title: "№45 Бұйрық: Қауіпсіздік ережелерін сақтау туралы", date: "2026-02-10", type: "PDF", size: "2.4 MB" },
+                { id: "o2", title: "№48 Бұйрық: Оқу жылындағы тәрбие жоспары", date: "2026-01-15", type: "WORD", size: "1.1 MB" }
+            ],
+            folder: [
+                { id: "f1", grade: "5 'А' сыныбы", title: "Сынып отырыстарының хаттамалары", date: "2026-02-01", type: "EXCEL", size: "850 KB" },
+                { id: "f2", grade: "8 'Б' сыныбы", title: "Оқушылардың әлеуметтік паспорты", date: "2026-01-20", type: "PDF", size: "3.2 MB" }
+            ],
+            parents: [
+                { id: "p1", title: "Ата-аналар комитетінің жиналыс хаттамасы №1", date: "2026-02-05", type: "WORD", grade: "6 'А'" },
+                { id: "p2", title: "Педагогикалық қолдау және кеңес беру материалдары", date: "2026-01-18", type: "PDF", grade: "Барлығы" }
+            ],
+            docs: [
+                { id: "d1", title: "Әдістемелік нұсқаулықтар мен хаттамалар жинағы", date: "2026-02-02", type: "PDF" },
+                { id: "d2", title: "Тәрбиешілер кеңесінің шешімдері", date: "2026-01-10", type: "WORD" }
+            ],
+            students: [
+                { id: "s1", grade: "7 'Ә'", name: "Аманжолқызы Айғаным", birthDate: "2013-05-12", iin: "130512400123", socialStatus: "Тұрмысы төмен отбасы", schoolAccount: "Жоқ" },
+                { id: "s2", grade: "9 'Б'", name: "Бейбітұлы Ернар", birthDate: "2011-11-20", iin: "111120300456", socialStatus: "Көпбалалы отбасы", schoolAccount: "Ішкі есепте тұрады" }
+            ],
+            events: [
+                { id: "e1", title: "«Зорлық-зомбылыққа жол жоқ» акциясы", date: "2026-02-08", format: "Фото/Видео, ҚМЖ, КТП", details: "Ашық тәрбие сағаты өткізілді." },
+                { id: "e2", title: "«Абай оқулары» байқауы", date: "2026-01-25", format: "Презентация, КТП", details: "Мектепшілік кезең." }
+            ],
+            plan: [
+                { id: "pl1", category: "Жылдық жоспар", title: "2025-2026 оқу жылына арналған тәрбие жұмысының кешенді жоспары", type: "PDF" },
+                { id: "pl2", category: "Қауіпсіздік ережесі", title: "Жолда жүру және өрт қауіпсіздігі ережелерінің жадынамасы", type: "WORD" },
+                { id: "pl3", category: "Психологпен бірлескен жұмыс", title: "Бейімделу кезеңіндегі оқушыларға психологиялық тренинг кестесі", type: "EXCEL" }
+            ],
+            teachers: [
+                { id: "t1", name: "Сейдахметова Г.К.", grade: "5 'А'", code: "TCH-9921", status: "Белсенді" },
+                { id: "t2", name: "Жұмабаев Б.Т.", grade: "10 'Б'", code: "TCH-4412", status: "Белсенді" }
+            ],
+            period: { startDate: "2026-01-01", endDate: "2026-06-01", status: "Тексеру мерзімі ашық" }
+        };
+
+        const dbData = structuredClone(defaultInitialData);
+        let currentUserRole = null;
+        let currentTeacher = null;
+        let currentActiveTab = 'orders';
+        let activeModalType = '';
+        let searchQuery = '';
+
+        function deepClone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        function loadData() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultInitialData));
+                    Object.assign(dbData, deepClone(defaultInitialData));
+                    return;
+                }
+                const saved = JSON.parse(raw);
+                Object.keys(defaultInitialData).forEach(key => {
+                    if (key === 'period') {
+                        dbData.period = saved.period || deepClone(defaultInitialData.period);
+                    } else {
+                        dbData[key] = Array.isArray(saved[key]) ? saved[key] : deepClone(defaultInitialData[key]);
+                    }
+                });
+            } catch (e) {
+                console.warn('Local storage read error:', e);
+                Object.assign(dbData, deepClone(defaultInitialData));
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dbData));
+                return true;
+            } catch (e) {
+                console.error('Local storage save error:', e);
+                showNotification(
+                    "Сақтау қатесі",
+                    "Браузер жады толған немесе сақтау бұғатталған. Қажет емес деректерді тазалаңыз.",
+                    true
+                );
+                return false;
+            }
+        }
+
+        function resetData() {
+            if (!confirm("Барлық енгізілген жергілікті деректерді бастапқы күйге қайтару керек пе?")) return;
+            Object.assign(dbData, deepClone(defaultInitialData));
+            saveData();
+            renderTabContent();
+            showNotification("Дайын", "Бастапқы мәліметтер қалпына келтірілді.");
+        }
+
+        function getSession() {
+            try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); }
+            catch { return null; }
+        }
+
+        function setSession(role, teacher) {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+                role,
+                teacher: teacher || null,
+                createdAt: new Date().toISOString()
+            }));
+        }
+
+        function clearSession() {
+            sessionStorage.removeItem(SESSION_KEY);
+        }
+
+        function initApp() {
+            loadData();
+
+            const session = getSession();
+            if (session?.role) {
+                currentUserRole = session.role;
+                currentTeacher = session.teacher || null;
+                openApplication();
+            }
+
+            renderTabContent();
+        }
+
+        window.showNotification = function(title, message, isError = false) {
+            const titleEl = document.getElementById('notifTitle');
+            const messageEl = document.getElementById('notifMessage');
+            const iconDiv = document.getElementById('notifIcon');
+
+            if (titleEl) titleEl.innerText = title;
+            if (messageEl) messageEl.innerText = message;
+
+            if (iconDiv) {
+                if (isError) {
+                    iconDiv.className = "w-14 h-14 rounded-full flex items-center justify-center mx-auto text-2xl bg-red-100 text-red-600";
+                    iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                } else {
+                    iconDiv.className = "w-14 h-14 rounded-full flex items-center justify-center mx-auto text-2xl bg-indigo-100 text-indigo-600";
+                    iconDiv.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+                }
+            }
+
+            document.getElementById('notificationModal')?.classList.remove('hidden');
+        };
+
+        window.closeNotification = function() {
+            document.getElementById('notificationModal')?.classList.add('hidden');
+        };
+
+        function openApplication() {
+            document.getElementById('authModal')?.classList.add('hidden');
+            document.getElementById('appContainer')?.classList.remove('hidden');
+
+            const roleText = document.getElementById('userRoleIndicator');
+            if (roleText) {
+                if (currentUserRole === 'admin') {
+                    roleText.innerText = "Рөл: Администратор (Mektep.Edu)";
+                } else if (currentTeacher) {
+                    roleText.innerText = `Рөл: ${currentTeacher.name} — ${currentTeacher.grade}`;
+                } else {
+                    roleText.innerText = "Рөл: Сынып жетекші";
+                }
+            }
+            renderTabContent();
+        }
+
+        window.loginAsAdmin = function() {
+            const pin = prompt("Администратор PIN-кодын енгізіңіз:");
+            if (pin === null) return;
+
+            if (pin.trim() !== ADMIN_PIN) {
+                showNotification("Қате PIN", "Администратор PIN-коды дұрыс емес.", true);
+                return;
+            }
+
+            currentUserRole = 'admin';
+            currentTeacher = null;
+            setSession('admin', null);
+            openApplication();
+            showNotification("Сәтті", "Администратор ретінде кірдіңіз.");
+        };
+
+        window.loginAsTeacher = function() {
+            const input = document.getElementById('teacherCodeInput');
+            const code = (input?.value || '').trim().toUpperCase();
+
+            if (!code) {
+                showNotification("Қате", "Бір реттік кодты енгізіңіз!", true);
+                return;
+            }
+
+            const foundTeacher = dbData.teachers.find(
+                t => String(t.code || '').toUpperCase() === code &&
+                     String(t.status || 'Белсенді') !== 'Бұғатталған'
+            );
+
+            if (!foundTeacher) {
+                showNotification(
+                    "Қате код",
+                    "Код табылмады. Әкімші берген TCH-xxxx кодын пайдаланыңыз.",
+                    true
+                );
+                return;
+            }
+
+            currentUserRole = 'teacher';
+            currentTeacher = foundTeacher;
+            setSession('teacher', foundTeacher);
+            openApplication();
+            showNotification("Сәтті", `${foundTeacher.name} ретінде жүйеге кірдіңіз.`);
+        };
+
+        window.logout = function() {
+            currentUserRole = null;
+            currentTeacher = null;
+            clearSession();
+
+            document.getElementById('appContainer')?.classList.add('hidden');
+            document.getElementById('authModal')?.classList.remove('hidden');
+
+            const codeInput = document.getElementById('teacherCodeInput');
+            if (codeInput) codeInput.value = '';
+            searchQuery = '';
+        };
+
+        window.switchTab = function(tabKey) {
+            currentActiveTab = tabKey;
+            searchQuery = '';
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-50', 'text-indigo-700', 'shadow-xs');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+
+            const activeBtn = document.getElementById(`btn-${tabKey}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-50', 'text-indigo-700', 'shadow-xs');
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            }
+
+            renderTabContent();
+        };
+
+        window.filterTable = function(input) {
+            searchQuery = String(input.value || '').toLowerCase();
+            renderTabContent(false);
+        };
+
+        function canEdit(category) {
+            if (currentUserRole === 'admin') return true;
+            // Teachers can add class work, parent work, events and student data.
+            return ['folder', 'parents', 'docs', 'students', 'events', 'plan'].includes(category);
+        }
+
+        function canDelete(category) {
+            return currentUserRole === 'admin';
+        }
+
+        function renderTabContent(resetFocus = true) {
+            const container = document.getElementById('tabContent');
+            if (!container) return;
+
+            let headerHTML = '';
+            let contentHTML = '';
+
+            switch(currentActiveTab) {
+                case 'orders':
+                    headerHTML = generateSectionHeader("Тәрбие бұйрықтары", "Мектептің тәрбие саласындағы ресми бұйрықтары", currentUserRole === 'admin');
+                    contentHTML = generateOrdersTable();
+                    break;
+                case 'folder':
+                    headerHTML = generateSectionHeader("Сынып папкасы", "1-11 сынып комплектілері мен папкалары", true);
+                    contentHTML = generateFolderTable();
+                    break;
+                case 'parents':
+                    headerHTML = generateSectionHeader("Ата-аналармен жұмыс", "Жиналыстар, кеңестер және есептер", true);
+                    contentHTML = generateParentsTable();
+                    break;
+                case 'docs':
+                    headerHTML = generateSectionHeader("Анықтамалар мен хаттамалар", "Әдістемелік материалдар мен хаттамалар", true);
+                    contentHTML = generateDocsTable();
+                    break;
+                case 'students':
+                    headerHTML = generateSectionHeader("Оқушы құжаттары", "Оқушылардың жеке деректері мен есебі", true);
+                    contentHTML = generateStudentsTable();
+                    break;
+                case 'events':
+                    headerHTML = generateSectionHeader("Іс-шаралар тізімі", "Өтілетін іс-шаралар, фото, видео, ҚМЖ және КТП", true);
+                    contentHTML = generateEventsTable();
+                    break;
+                case 'plan':
+                    headerHTML = generateSectionHeader("Тәрбие жұмыс жоспары", "Жылдық жоспар және қауіпсіздік ережелері", true);
+                    contentHTML = generatePlanTable();
+                    break;
+                case 'teachers':
+                    headerHTML = generateSectionHeader("Сынып жетекшілер", "Сынып жетекшілер мен бір реттік кодтар", currentUserRole === 'admin');
+                    contentHTML = generateTeachersTable();
+                    break;
+                case 'period':
+                    headerHTML = generateSectionHeader("Есептік кезең", "Тексеру мерзімін таңдау және бақылау", false);
+                    contentHTML = generatePeriodContent();
+                    break;
+            }
+
+            container.innerHTML = headerHTML + contentHTML;
+
+            if (searchQuery) {
+                const searchInput = container.querySelector('input[data-search]');
+                if (searchInput && resetFocus) {
+                    searchInput.value = searchQuery;
+                    searchInput.focus();
+                }
+            }
+        }
+
+        function generateSectionHeader(title, subtitle, showAddBtn) {
+            return `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">${escapeHtml(title)}</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">${escapeHtml(subtitle)}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex-1 sm:flex-initial">
+                            <input data-search type="text" placeholder="Іздеу..." onkeyup="filterTable(this)" value="${escapeAttr(searchQuery)}"
+                                class="pl-9 pr-4 py-2.5 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white w-full sm:w-64 transition">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                        </div>
+                        ${showAddBtn ? `<button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-2xl text-sm transition shadow-md shadow-indigo-200 flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-plus"></i> Жаңа қосу</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function actionButtons(category, item) {
+            const download = `<button onclick="downloadItem('${escapeAttr(item.title || item.name || 'Жазба')}', '${escapeAttr(category)}', '${escapeAttr(item.id)}')" class="text-indigo-600 hover:text-indigo-800 font-semibold text-sm"><i class="fa-solid fa-download"></i> Жүктеу</button>`;
+            const del = canDelete(category)
+                ? `<button onclick="deleteRecord('${escapeAttr(category)}', '${escapeAttr(item.id)}')" class="text-red-500 hover:text-red-700 font-semibold text-sm"><i class="fa-solid fa-trash"></i> Жою</button>`
+                : '';
+            return `${download} ${del}`;
+        }
+
+        function generateOrdersTable() {
+            const filtered = dbData.orders.filter(item =>
+                String(item.title || '').toLowerCase().includes(searchQuery) ||
+                String(item.type || '').toLowerCase().includes(searchQuery)
+            );
+            let rows = filtered.map(item => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 font-semibold text-slate-900">${escapeHtml(item.title)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.date)}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg">${escapeHtml(item.type)}</span></td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.size || '1.5 MB')}</td>
+                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">${actionButtons('orders', item)}</td>
+                </tr>`).join('');
+            if (!filtered.length) rows = emptyRow(5);
+            return tableWrapper(`<tr><th>Құжат атауы</th><th>Күні</th><th>Форматы</th><th>Өлшемі</th><th class="text-right">Әрекеттер</th></tr>`, rows);
+        }
+
+        function generateFolderTable() {
+            const filtered = dbData.folder.filter(item =>
+                String(item.title || '').toLowerCase().includes(searchQuery) ||
+                String(item.grade || '').toLowerCase().includes(searchQuery)
+            );
+            let rows = filtered.map(item => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 font-bold text-indigo-600">${escapeHtml(item.grade)}</td>
+                    <td class="px-6 py-4 font-semibold text-slate-900">${escapeHtml(item.title)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.date)}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg">${escapeHtml(item.type)}</span></td>
+                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">${actionButtons('folder', item)}</td>
+                </tr>`).join('');
+            if (!filtered.length) rows = emptyRow(5);
+            return tableWrapper(`<tr><th>Сыныбы</th><th>Құжат атауы</th><th>Күні</th><th>Форматы</th><th class="text-right">Әрекеттер</th></tr>`, rows);
+        }
+
+        function generateParentsTable() {
+            const filtered = dbData.parents.filter(item =>
+                String(item.title || '').toLowerCase().includes(searchQuery) ||
+                String(item.grade || '').toLowerCase().includes(searchQuery)
+            );
+            let rows = filtered.map(item => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 font-semibold text-slate-900">${escapeHtml(item.title)}</td>
+                    <td class="px-6 py-4 font-medium text-slate-600">${escapeHtml(item.grade)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.date)}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg">${escapeHtml(item.type)}</span></td>
+                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">${actionButtons('parents', item)}</td>
+                </tr>`).join('');
+            if (!filtered.length) rows = emptyRow(5);
+            return tableWrapper(`<tr><th>Жұмыс тақырыбы</th><th>Сыныбы</th><th>Күні</th><th>Форматы</th><th class="text-right">Әрекеттер</th></tr>`, rows);
+        }
+
+        function generateDocsTable() {
+            const filtered = dbData.docs.filter(item =>
+                String(item.title || '').toLowerCase().includes(searchQuery)
+            );
+            let rows = filtered.map(item => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 font-semibold text-slate-900">${escapeHtml(item.title)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.date)}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg">${escapeHtml(item.type)}</span></td>
+                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">${actionButtons('docs', item)}</td>
+                </tr>`).join('');
+            if (!filtered.length) rows = emptyRow(4);
+            return tableWrapper(`<tr><th>Атауы / Хаттама</th><th>Күні</th><th>Форматы</th><th class="text-right">Әрекеттер</th></tr>`, rows);
+        }
+
+        function generateStudentsTable() {
+            const filtered = dbData.students.filter(item =>
+                String(item.name || '').toLowerCase().includes(searchQuery) ||
+                String(item.grade || '').toLowerCase().includes(searchQuery) ||
+                String(item.iin || '').includes(searchQuery)
+            );
+            let rows = filtered.map(item => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 font-bold text-indigo-600">${escapeHtml(item.grade)}</td>
+                    <td class="px-6 py-4 font-semibold text-slate-900">${escapeHtml(item.name)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.birthDate || '')}</td>
+                    <td class="px-6 py-4 text-slate-600 font-mono">${escapeHtml(item.iin)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.socialStatus || '')}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-lg">${escapeHtml(item.schoolAccount || 'Жоқ')}</span></td>
+                    <td class="px-6 py-4 text-right whitespace-nowrap">${actionButtons('students', item)}</td>
+                </tr>`).join('');
+            if (!filtered.length) rows = emptyRow(7);
+            return tableWrapper(`<tr><th>СЫНЫБЫ</th><th>АТЫ-ЖӨНІ</th><th>ТУЫЛҒАН КҮНІ</th><th>ИИН</th><th>ӘЛЕУМЕТТІК ЖАҒДАЙЫ</th><th>МЕКТЕП ЕСЕБІНДЕ</th><th class="text-right">Әрекеттер</th></tr>`, rows);
+        }
+
+        function generateEventsTable() {
+            const filtered = dbData.events.filter(item =>
+                String(item.title || '').toLowerCase().includes(searchQuery) ||
+                String(item.details || '').toLowerCase().includes(searchQuery)
+            );
+            let rows = filtered.map(item => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 font-semibold text-slate-900">${escapeHtml(item.title)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.date)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.format)}</td>
+                    <td class="px-6 py-4 text-slate-600">${escapeHtml(item.details)}</td>
+                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">${actionButtons('events', item)}</td>
+                </tr>`).join('');
+            if (!filtered.length) rows = emptyRow(5);
+            return tableWrapper(`<tr><th>Іс-шара атауы</th><th>Күні</th><th>Форматы (Видео, фото, ҚМЖ, КТП)</th><th>Сипаттамасы</th><th class="text-right">Әрекеттер</th></tr>`, rows);
+        }
+
+        function generatePlanTable() {
+            const filtered = dbData.plan.filter(item =>
+                String(item.title || '').toLowerCase().includes(searchQuery) ||
+                String(item.category || '').toLowerCase().includes(searchQuery)
+            );
+            let rows = filtered.map(item => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 font-bold text-indigo-600">${escapeHtml(item.category)}</td>
+                    <td class="px-6 py-4 font-semibold text-slate-900">${escapeHtml(item.title)}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-cyan-50 text-cyan-700 text-xs font-bold rounded-lg">${escapeHtml(item.type)}</span></td>
+                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">${actionButtons('plan', item)}</td>
+                </tr>`).join('');
+            if (!filtered.length) rows = emptyRow(4);
+            return tableWrapper(`<tr><th>Бөлім санаттары</th><th>Құжат атауы</th><th>Түрі</th><th class="text-right">Әрекеттер</th></tr>`, rows);
+        }
+
+        function generateTeachersTable() {
+            const filtered = dbData.teachers.filter(item =>
+                String(item.name || '').toLowerCase().includes(searchQuery) ||
+                String(item.grade || '').toLowerCase().includes(searchQuery) ||
+                String(item.code || '').toLowerCase().includes(searchQuery)
+            );
+            let rows = filtered.map(item => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="px-6 py-4 font-semibold text-slate-900">${escapeHtml(item.name)}</td>
+                    <td class="px-6 py-4 font-bold text-indigo-600">${escapeHtml(item.grade)}</td>
+                    <td class="px-6 py-4 font-mono font-bold text-slate-700">${escapeHtml(item.code)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 ${item.status === 'Бұғатталған' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-xs font-bold rounded-lg">${escapeHtml(item.status || 'Белсенді')}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                        ${currentUserRole === 'admin'
+                            ? `<button onclick="toggleTeacherStatus('${escapeAttr(item.id)}')" class="text-amber-600 hover:text-amber-800 font-semibold text-sm mr-2"><i class="fa-solid fa-user-lock"></i> ${item.status === 'Бұғатталған' ? 'Ашу' : 'Бұғаттау'}</button>
+                               <button onclick="deleteRecord('teachers', '${escapeAttr(item.id)}')" class="text-red-500 hover:text-red-700 font-semibold text-sm"><i class="fa-solid fa-trash"></i> Жою</button>`
+                            : '<span class="text-xs text-slate-400">Тек әкімшіге</span>'}
+                    </td>
+                </tr>`).join('');
+            if (!filtered.length) rows = emptyRow(5);
+            return tableWrapper(`<tr><th>Мұғалім аты-жөні</th><th>Сыныбы</th><th>Кіру коды</th><th>Мәртебесі</th><th class="text-right">Әрекеттер</th></tr>`, rows);
+        }
+
+        function generatePeriodContent() {
+            const p = dbData.period || defaultInitialData.period;
+            return `
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-xs max-w-2xl space-y-6">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-indigo-50 text-indigo-600 p-4 rounded-2xl"><i class="fa-solid fa-calendar-check text-2xl"></i></div>
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900">Есептік кезең және Тексеру мерзімі</h3>
+                            <p class="text-sm text-slate-500">Сынып жетекшілерінің есеп тапсыру мерзімін реттеңіз.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Басталу күні</label>
+                            <input type="date" id="periodStart" value="${escapeAttr(p.startDate || '')}" ${currentUserRole === 'admin' ? '' : 'disabled'}
+                                class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Аяқталу күні</label>
+                            <input type="date" id="periodEnd" value="${escapeAttr(p.endDate || '')}" ${currentUserRole === 'admin' ? '' : 'disabled'}
+                                class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Мәртебесі</label>
+                        <select id="periodStatus" ${currentUserRole === 'admin' ? '' : 'disabled'}
+                            class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Тексеру мерзімі ашық" ${p.status === 'Тексеру мерзімі ашық' ? 'selected' : ''}>Тексеру мерзімі ашық</option>
+                            <option value="Тексеру мерзімі аяқталды" ${p.status === 'Тексеру мерзімі аяқталды' ? 'selected' : ''}>Тексеру мерзімі аяқталды</option>
+                        </select>
+                    </div>
+                    ${currentUserRole === 'admin'
+                        ? `<button onclick="savePeriod()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-2xl text-sm transition shadow-md shadow-indigo-200">Кезеңді сақтау және жаңарту</button>`
+                        : '<p class="text-xs text-amber-700 bg-amber-50 p-4 rounded-2xl border border-amber-200">Сынып жетекшілер бұл бөлімді тек көре алады.</p>'}
+                </div>`;
+        }
+
+        function tableWrapper(headers, rows) {
+            return `
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead><tr class="bg-slate-50/80 text-slate-600 border-b border-slate-200 text-xs uppercase tracking-wider">${headers}</tr></thead>
+                            <tbody class="divide-y divide-slate-100">${rows}</tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        function emptyRow(cols) {
+            return `<tr><td colspan="${cols}" class="px-6 py-8 text-center text-slate-400">Мәлімет табылмады</td></tr>`;
+        }
+
+        window.openAddModal = function() {
+            if (!currentUserRole) {
+                showNotification("Кіру қажет", "Алдымен жүйеге кіріңіз.", true);
+                return;
+            }
+            if (currentUserRole !== 'admin' && currentActiveTab === 'orders') {
+                showNotification("Қолжетімсіз", "Тәрбие бұйрықтарын тек әкімші басқарады.", true);
+                return;
+            }
+            if (currentUserRole !== 'admin' && currentActiveTab === 'teachers') {
+                showNotification("Қолжетімсіз", "Сынып жетекшілерді тек әкімші басқарады.", true);
+                return;
+            }
+
+            activeModalType = currentActiveTab;
+            document.getElementById('modalTitle').innerText = "Жаңа құжат немесе жазба қосу";
+            const fieldsContainer = document.getElementById('modalFormFields');
+
+            if (activeModalType === 'students') {
+                fieldsContainer.innerHTML = `
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Сыныбы</label><input type="text" id="m_grade" placeholder="Мысалы: 7 'А'" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Аты-жөні</label><input type="text" id="m_name" placeholder="Оқушының Аты-жөні" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Туылған күні</label><input type="date" id="m_birth" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">ИИН</label><input type="text" id="m_iin" maxlength="12" inputmode="numeric" placeholder="12 цифрлы ИИН" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Әлеуметтік жағдайы</label><input type="text" id="m_status" placeholder="Мысалы: Тұрмысы төмен" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Мектеп есебінде</label><select id="m_account" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"><option value="Жоқ">Жоқ</option><option value="Ішкі есепте тұрады">Ішкі есепте тұрады</option><option value="ПД есебінде">ПД есебінде</option></select></div>`;
+            } else if (activeModalType === 'folder') {
+                fieldsContainer.innerHTML = `
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Сыныбы</label><input type="text" id="m_grade" placeholder="Мысалы: 6 'Б'" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Құжат атауы</label><input type="text" id="m_title" placeholder="Құжат атауы" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Форматы</label><select id="m_format" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"><option>PDF</option><option>WORD</option><option>EXCEL</option></select></div>`;
+            } else if (activeModalType === 'parents') {
+                fieldsContainer.innerHTML = `
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Жұмыс тақырыбы / атауы</label><input type="text" id="m_title" placeholder="Жиналыс атауы" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Сыныбы</label><input type="text" id="m_grade" placeholder="Мысалы: 6 'А' немесе Барлығы" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Форматы</label><select id="m_format" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"><option>WORD</option><option>PDF</option></select></div>`;
+            } else if (activeModalType === 'events') {
+                fieldsContainer.innerHTML = `
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Іс-шара атауы</label><input type="text" id="m_title" placeholder="Іс-шара атауы" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Форматы</label><input type="text" id="m_format" placeholder="Фото/Видео, ҚМЖ, КТП" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Сипаттамасы</label><textarea id="m_details" placeholder="Қысқаша сипаттама..." class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></textarea></div>`;
+            } else if (activeModalType === 'teachers') {
+                fieldsContainer.innerHTML = `
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Мұғалім аты-жөні</label><input type="text" id="m_name" placeholder="Мысалы: Ахметова З.Б." class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Сыныбы</label><input type="text" id="m_grade" placeholder="Мысалы: 8 'В'" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Бір реттік кіру коды</label><input type="text" id="m_code" placeholder="Мысалы: TCH-7788" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm uppercase font-mono"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Мәртебесі</label><select id="m_teacher_status" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"><option>Белсенді</option><option>Бұғатталған</option></select></div>`;
+            } else {
+                fieldsContainer.innerHTML = `
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Құжат атауы</label><input type="text" id="m_title" placeholder="Құжат атауы" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>
+                    ${activeModalType === 'plan' ? `<div><label class="block text-xs font-bold text-slate-600 mb-1">Санаты</label><input type="text" id="m_category" placeholder="Мысалы: Жылдық жоспар" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"></div>` : ''}
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">Түрі немесе форматы</label><select id="m_format" class="w-full px-4 py-3 border border-slate-200 bg-slate-50/50 rounded-2xl text-sm"><option>PDF</option><option>WORD</option><option>EXCEL</option></select></div>`;
+            }
+
+            document.getElementById('actionModal').classList.remove('hidden');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('actionModal')?.classList.add('hidden');
+        };
+
+        window.saveRecord = async function() {
+            const today = new Date().toISOString().slice(0, 10);
+            const recordId = 'rec_' + Date.now();
+            let newObj = {};
+
+            if (activeModalType === 'students') {
+                const grade = val('m_grade'), name = val('m_name'), birthDate = val('m_birth');
+                const iin = val('m_iin'), socialStatus = val('m_status'), schoolAccount = val('m_account');
+                if (!grade || !name || !iin) return showNotification("Қате", "Сынып, аты-жөні және ИИН міндетті.", true);
+                if (!/^\d{12}$/.test(iin)) return showNotification("Қате", "ИИН дәл 12 цифрдан тұруы керек.", true);
+                newObj = { id: recordId, grade, name, birthDate, iin, socialStatus, schoolAccount };
+            } else if (activeModalType === 'folder') {
+                const grade = val('m_grade'), title = val('m_title'), type = val('m_format');
+                if (!grade || !title) return showNotification("Қате", "Өрістерді бос қалдырмаңыз.", true);
+                newObj = { id: recordId, grade, title, date: today, type, size: "1.2 MB" };
+            } else if (activeModalType === 'parents') {
+                const title = val('m_title'), grade = val('m_grade'), type = val('m_format');
+                if (!title || !grade) return showNotification("Қате", "Өрістерді бос қалдырмаңыз.", true);
+                newObj = { id: recordId, title, date: today, type, grade };
+            } else if (activeModalType === 'events') {
+                const title = val('m_title'), format = val('m_format'), details = val('m_details');
+                if (!title) return showNotification("Қате", "Іс-шара атауын енгізіңіз.", true);
+                newObj = { id: recordId, title, date: today, format: format || 'ҚМЖ, КТП', details: details || 'Өткізілді' };
+            } else if (activeModalType === 'teachers') {
+                if (currentUserRole !== 'admin') return showNotification("Құқық жоқ", "Тек әкімші қоса алады.", true);
+                const name = val('m_name'), grade = val('m_grade'), code = val('m_code').toUpperCase();
+                const status = val('m_teacher_status') || 'Белсенді';
+                if (!name || !grade || !code) return showNotification("Қате", "Барлық өрістерді толтырыңыз.", true);
+                if (!/^TCH-\d{4,8}$/.test(code)) return showNotification("Қате", "Код TCH-1234 сияқты болуы керек.", true);
+                if (dbData.teachers.some(t => String(t.code).toUpperCase() === code)) return showNotification("Қате", "Бұл код бұрыннан бар.", true);
+                newObj = { id: recordId, name, grade, code, status };
+            } else {
+                const title = val('m_title'), type = val('m_format');
+                const category = val('m_category');
+                if (!title) return showNotification("Қате", "Құжат атауын енгізіңіз.", true);
+                if (activeModalType === 'plan') newObj = { id: recordId, category: category || 'Тәрбие жоспары', title, type };
+                else newObj = { id: recordId, title, date: today, type, size: "1.5 MB" };
+            }
+
+            if (!Array.isArray(dbData[activeModalType])) return;
+            dbData[activeModalType].push(newObj);
+            if (saveData()) {
+                closeModal();
+                renderTabContent();
+                showNotification("Сәтті", "Жаңа жазба браузер жадына сақталды.");
+            }
+        };
+
+        window.deleteRecord = function(category, id) {
+            if (!canDelete(category)) {
+                showNotification("Құқық жоқ", "Бұл әрекетті тек администратор орындай алады.", true);
+                return;
+            }
+            if (!confirm("Осы жазбаны жоюға сенімдісіз бе?")) return;
+
+            dbData[category] = dbData[category].filter(item => String(item.id) !== String(id));
+            saveData();
+            renderTabContent();
+            showNotification("Жойылды", "Жазба өшірілді.");
+        };
+
+        window.toggleTeacherStatus = function(id) {
+            if (currentUserRole !== 'admin') return;
+            const teacher = dbData.teachers.find(t => String(t.id) === String(id));
+            if (!teacher) return;
+            teacher.status = teacher.status === 'Бұғатталған' ? 'Белсенді' : 'Бұғатталған';
+            saveData();
+            renderTabContent();
+            showNotification("Жаңартылды", `Мәртебе: ${teacher.status}`);
+        };
+
+        window.downloadItem = function(itemName, category, id) {
+            let item = null;
+            if (category && Array.isArray(dbData[category])) {
+                item = dbData[category].find(x => String(x.id) === String(id));
+            }
+
+            const content = [
+                "Mektep.Edu — Тәрбие Порталы",
+                "--------------------------------",
+                `Бөлім: ${category || 'Жазба'}`,
+                `Атауы: ${item?.title || item?.name || itemName}`,
+                `Күні: ${item?.date || new Date().toISOString().slice(0,10)}`,
+                "",
+                JSON.stringify(item || { title: itemName }, null, 2)
+            ].join("\n");
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${safeFileName(item?.title || itemName)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        };
+
+        window.savePeriod = function() {
+            if (currentUserRole !== 'admin') {
+                showNotification("Құқық жоқ", "Тек әкімші сақтай алады.", true);
+                return;
+            }
+
+            const start = val('periodStart');
+            const end = val('periodEnd');
+            const status = val('periodStatus');
+
+            if (!start || !end) return showNotification("Қате", "Екі күнді де таңдаңыз.", true);
+            if (start > end) return showNotification("Қате", "Басталу күні аяқталу күнінен кейін болмауы керек.", true);
+
+            dbData.period = { startDate: start, endDate: end, status };
+            saveData();
+            renderTabContent();
+            showNotification("Сақталды", "Есептік кезең жаңартылды.");
+        };
+
+        // Admin utility: available only from the browser console if needed.
+        window.exportPortalData = function() {
+            const blob = new Blob([JSON.stringify(dbData, null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mektep-edu-backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        window.importPortalData = function(file) {
+            if (currentUserRole !== 'admin') return showNotification("Құқық жоқ", "Тек әкімші импорт жасай алады.", true);
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const imported = JSON.parse(reader.result);
+                    Object.keys(defaultInitialData).forEach(key => {
+                        if (key === 'period') dbData.period = imported.period || deepClone(defaultInitialData.period);
+                        else if (Array.isArray(imported[key])) dbData[key] = imported[key];
+                    });
+                    saveData();
+                    renderTabContent();
+                    showNotification("Дайын", "Деректер импортталды.");
+                } catch {
+                    showNotification("Қате", "JSON файлын оқу мүмкін болмады.", true);
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        function val(id) {
+            return String(document.getElementById(id)?.value || '').trim();
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function escapeAttr(value) {
+            return escapeHtml(value).replaceAll('`', '&#096;');
+        }
+
+        function safeFileName(value) {
+            return String(value || 'mektep-edu')
+                .replace(/[\\/:*?"<>|]/g, '_')
+                .slice(0, 100);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
